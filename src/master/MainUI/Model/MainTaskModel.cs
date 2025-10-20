@@ -5,7 +5,7 @@ namespace MainUI.Model
     /// <summary>
     /// Get结果
     /// </summary>
-    internal class MainTaskResultModel
+    public class MainTaskResultModel
     {
         public string msg { get; set; }
         public string total { get; set; }
@@ -15,7 +15,7 @@ namespace MainUI.Model
 
 
     [Table(Name = "MainTaskTable")]
-    internal class MainTaskModel
+    public class MainTaskModel
     {
         public List<holdItem> holdItems { get; set; }
 
@@ -88,7 +88,7 @@ namespace MainUI.Model
         public string qualityProcess { get; set; }
     }
 
-    internal class holdItem
+    public class holdItem
     {
         /// <summary>
         /// 耐压子任务id

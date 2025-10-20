@@ -19,9 +19,72 @@ namespace MainUI.TaskInformation
             AddCobData(selectTrainNo, taskBLL.GetCobTrainNo());
             //table1.SetRowStyle += Table1_SetRowStyle;
 
-            selectProjectNumber.SelectedIndex = VarHelper.ProjectNumberKey;
-            selectCarCode.SelectedIndex = VarHelper.CarCodeKey;
-            selectTrainNo.SelectedIndex = VarHelper.TrainNoKey;
+            // 恢复上次选择的值(而不是索引)
+            RestoreLastSelection();
+        }
+
+        //  恢复上次选择的条件
+        private void RestoreLastSelection()
+        {
+            try
+            {
+                bool hasCondition = false;
+
+                // 恢复车型编码
+                if (!string.IsNullOrEmpty(VarHelper.LastProjectNumber))
+                {
+                    for (int i = 0; i < selectProjectNumber.Items.Count; i++)
+                    {
+                        if (selectProjectNumber.Items[i].ToString() == VarHelper.LastProjectNumber)
+                        {
+                            selectProjectNumber.SelectedIndex = i;
+                            hasCondition = true;
+                            break;
+                        }
+                    }
+                }
+
+                // 恢复配属辆号
+                if (!string.IsNullOrEmpty(VarHelper.LastCarCode))
+                {
+                    for (int i = 0; i < selectCarCode.Items.Count; i++)
+                    {
+                        if (selectCarCode.Items[i].ToString() == VarHelper.LastCarCode)
+                        {
+                            selectCarCode.SelectedIndex = i;
+                            hasCondition = true;
+                            break;
+                        }
+                    }
+                }
+
+                // 恢复车列号
+                if (!string.IsNullOrEmpty(VarHelper.LastTrainNo))
+                {
+                    for (int i = 0; i < selectTrainNo.Items.Count; i++)
+                    {
+                        if (selectTrainNo.Items[i].ToString() == VarHelper.LastTrainNo)
+                        {
+                            selectTrainNo.SelectedIndex = i;
+                            hasCondition = true;
+                            break;
+                        }
+                    }
+                }
+
+                // 使用 BeginInvoke 自动触发查询
+                if (hasCondition)
+                {
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        btnSeek_Click(null, null);
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error("恢复查询条件失败:", ex);
+            }
         }
 
         private void InitTableTitle()
@@ -137,6 +200,11 @@ namespace MainUI.TaskInformation
         {
             try
             {
+                //  保存当前选择的值(而不是索引)
+                VarHelper.LastProjectNumber = selectProjectNumber.SelectedValue?.ToString() ?? "";
+                VarHelper.LastCarCode = selectCarCode.SelectedValue?.ToString() ?? "";
+                VarHelper.LastTrainNo = selectTrainNo.SelectedValue?.ToString() ?? "";
+
                 NewTaskBLL bLL = new();
                 var data = bLL.GetNewTasks(new NewTaskModel()
                 {
@@ -159,9 +227,10 @@ namespace MainUI.TaskInformation
         {
             try
             {
-                VarHelper.ProjectNumberKey = selectProjectNumber.SelectedIndex;
-                VarHelper.CarCodeKey = selectCarCode.SelectedIndex;
-                VarHelper.TrainNoKey = selectTrainNo.SelectedIndex;
+                // 保存值而不是索引
+                VarHelper.LastProjectNumber = selectProjectNumber.SelectedValue?.ToString() ?? "";
+                VarHelper.LastCarCode = selectCarCode.SelectedValue?.ToString() ?? "";
+                VarHelper.LastTrainNo = selectTrainNo.SelectedValue?.ToString() ?? "";
             }
             catch (Exception ex)
             {

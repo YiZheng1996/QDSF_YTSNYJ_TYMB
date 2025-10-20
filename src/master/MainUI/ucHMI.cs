@@ -708,24 +708,71 @@ namespace MainUI
         }
 
         #region 信息接口
+
         private async void BtnTaskDownload_Click(object sender, EventArgs e)
         {
             try
             {
+                // 禁用按钮
+                BtnTaskDownload.Enabled = false;
+
+                // 第一步: 先获取任务列表数据
                 TaskDownload task = new(frm);
-                if (!await task.GetMainTask())
+
+                AppendText("正在获取任务列表...");
+                NlogHelper.Default.Info("开始获取任务列表");
+
+                // 调用API获取任务数据
+                var taskData = await task.GetMainTaskList();
+
+                // 第二步: 检查是否有数据
+                if (taskData == null)
                 {
-                    MessageHelper.MessageOK(frm, "任务获取失败！");
+                    MessageHelper.MessageOK(frm, "获取任务列表失败!");
+                    AppendText("任务列表获取失败");
+                    return;
+                }
+
+                if (taskData.list == null || taskData.list.Count == 0)
+                {
+                    MessageHelper.MessageOK(frm, "没有可下载的任务!");
+                    AppendText("没有可下载的任务");
+                    return;
+                }
+
+                AppendText($"获取到 {taskData.list.Count} 个主任务");
+                NlogHelper.Default.Info($"成功获取任务列表,共 {taskData.list.Count} 个主任务");
+
+                // 第三步: 只有在有数据的情况下才打开选择界面
+                FrmTaskSelectDownload frmSelectTask = new(taskData);
+                VarHelper.ShowDialogWithOverlay(frm, frmSelectTask);
+
+                // 第四步: 处理用户选择结果
+                if (frmSelectTask.DialogResult == DialogResult.OK)
+                {
+                    // 用户点击了确认下载,数据已经在对话框中保存到数据库
+                    int count = frmSelectTask.SelectedTasks?.Count ?? 0;
+                    AppendText($"任务下载完成!共下载 {count} 个任务");
+                    MessageHelper.MessageOK(frm, $"任务下载完成!共下载 {count} 个任务");
+                    NlogHelper.Default.Info($"任务下载完成,共下载 {count} 个任务");
                 }
                 else
                 {
-                    MessageHelper.MessageOK(frm, "任务获取完成！");
+                    // 用户取消了下载
+                    AppendText("取消任务下载");
+                    NlogHelper.Default.Info("用户取消了任务下载");
                 }
             }
             catch (Exception ex)
             {
-                NlogHelper.Default.Error("任务获取失败：", ex);
-                MessageHelper.MessageOK(frm, "任务获取失败：" + ex.Message);
+                NlogHelper.Default.Error("任务下载失败:", ex);
+                MessageHelper.MessageOK(frm, "任务下载失败:" + ex.Message);
+                AppendText($"任务下载失败: {ex.Message}");
+            }
+            finally
+            {
+                // 恢复按钮(无论成功失败都会执行)
+                BtnTaskDownload.Enabled = true;
             }
         }
 

@@ -275,6 +275,156 @@ namespace MainUI.TaskInformation
             Close();
         }
 
+
+        // ✅ 新增: 双击单元格事件处理 - 批量修改主表和子表
+        private void Table1_CellDoubleClick(object sender, TableClickEventArgs e)
+        {
+            try
+            {
+                // 获取双击的行数据
+                if (e.Record is NewTaskModel data)
+                {
+                    // 1. 查询该主任务下有多少条子任务记录
+                    int affectedCount = GetAffectedRecordCount(data.holdTaskId, data.holdItemId);
+
+                    NlogHelper.Default.Info($"双击编辑任务ID - 当前记录ID:{data.ID}, holdTaskId:{data.holdTaskId}, holdItemId:{data.holdItemId}, 影响记录数:{affectedCount}");
+
+                    // 2. 打开编辑对话框
+                    FrmEditTaskId editForm = new FrmEditTaskId(
+                        data.holdTaskId,
+                        data.holdItemId,
+                        affectedCount
+                    );
+
+                    VarHelper.ShowDialogWithOverlay(this, editForm);
+
+                    // 3. 如果用户点击了确定
+                    if (editForm.DialogResult == DialogResult.OK)
+                    {
+                        // 显示加载动画
+                        table1.Spin(new Spin.Config()
+                        {
+                            Text = "正在批量更新任务ID...",
+                            Font = new Font("宋体", 15),
+                            Back = Color.FromArgb(189, 179, 172),
+                        }, () =>
+                        {
+                            Thread.Sleep(500); // 模拟耗时操作
+                        }, () =>
+                        {
+                            // 4. 批量更新主表和子表
+                            var result = BatchUpdateTaskIds(
+                                data.holdTaskId,
+                                data.holdItemId,
+                                editForm.HoldTaskId,
+                                editForm.HoldItemId
+                            );
+
+                            Invoke(() =>
+                            {
+                                if (result.Success)
+                                {
+                                    NlogHelper.Default.Info($"批量修改任务ID成功 - 主表更新:{result.MainTableCount}条, 子表更新:{result.SubTableCount}条");
+
+                                    // 5. 重新查询并刷新表格
+                                    btnSeek_Click(null, null);
+
+                                    MessageHelper.MessageOK(this,
+                                        $"任务ID修改成功!\n\n" +
+                                        $"主任务表: 更新 {result.MainTableCount} 条记录\n" +
+                                        $"子任务表: 更新 {result.SubTableCount} 条记录");
+                                }
+                                else
+                                {
+                                    NlogHelper.Default.Error($"批量修改任务ID失败: {result.ErrorMessage}");
+                                    MessageHelper.MessageOK(this, $"任务ID修改失败!\n\n错误信息: {result.ErrorMessage}");
+                                }
+                            });
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error("双击编辑任务ID错误:", ex);
+                MessageHelper.MessageOK(this, "双击编辑任务ID错误:" + ex.Message);
+            }
+        }
+
+        // ✅ 新增: 查询受影响的记录数
+        private int GetAffectedRecordCount(string oldHoldTaskId, string oldHoldItemId)
+        {
+            try
+            {
+                // 查询该主任务下有多少条子任务记录
+                var count = VarHelper.fsql.Select<HoldTaskModel>()
+                    .Where(m => m.holdTaskId == oldHoldTaskId && m.holdItemId == oldHoldItemId)
+                    .Count();
+
+                return (int)count;
+            }
+            catch (Exception ex)
+            {
+                NlogHelper.Default.Error("查询受影响记录数失败:", ex);
+                return 0;
+            }
+        }
+
+        // ✅ 修正版: 批量更新主表和子表的任务ID (不使用CreateUnitOfWork)
+        private BatchUpdateResult BatchUpdateTaskIds(
+            string oldHoldTaskId,
+            string oldHoldItemId,
+            string newHoldTaskId,
+            string newHoldItemId)
+        {
+            var result = new BatchUpdateResult();
+
+            try
+            {
+                NlogHelper.Default.Info($"开始批量更新任务ID - 旧值:({oldHoldTaskId},{oldHoldItemId}) 新值:({newHoldTaskId},{newHoldItemId})");
+
+                // 1. 更新主任务表(MainTaskTable)
+                var mainTableCount = VarHelper.fsql.Update<MainTaskModel>()
+                    .Set(m => m.holdTaskId, newHoldTaskId)
+                    .Set(m => m.holdItemId, newHoldItemId)
+                    .Where(m => m.holdTaskId == oldHoldTaskId && m.holdItemId == oldHoldItemId)
+                    .ExecuteAffrows();
+
+                NlogHelper.Default.Info($"主任务表更新结果 - 影响行数:{mainTableCount}");
+
+                // 2. 更新子任务表(HoldTaskTable)
+                var subTableCount = VarHelper.fsql.Update<HoldTaskModel>()
+                    .Set(m => m.holdTaskId, newHoldTaskId)
+                    .Set(m => m.holdItemId, newHoldItemId)
+                    .Where(m => m.holdTaskId == oldHoldTaskId && m.holdItemId == oldHoldItemId)
+                    .ExecuteAffrows();
+
+                NlogHelper.Default.Info($"子任务表更新结果 - 影响行数:{subTableCount}");
+
+                result.Success = true;
+                result.MainTableCount = mainTableCount;
+                result.SubTableCount = subTableCount;
+
+                NlogHelper.Default.Info($"批量更新任务ID成功 - 主表:{mainTableCount}条, 子表:{subTableCount}条");
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.ErrorMessage = ex.Message;
+                NlogHelper.Default.Error("批量更新任务ID失败:", ex);
+            }
+
+            return result;
+        }
+
+        // ✅ 新增: 批量更新结果类
+        private class BatchUpdateResult
+        {
+            public bool Success { get; set; }
+            public int MainTableCount { get; set; }
+            public int SubTableCount { get; set; }
+            public string ErrorMessage { get; set; }
+        }
     }
 
 }

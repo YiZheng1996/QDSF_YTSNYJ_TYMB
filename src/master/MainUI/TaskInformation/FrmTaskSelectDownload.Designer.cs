@@ -40,6 +40,7 @@
             table1.BackColor = Color.FromArgb(235, 227, 221);
             table1.BackgroundImageLayout = ImageLayout.None;
             table1.BadgeMode = true;
+            table1.CheckSize = 20;
             table1.ClipboardCopy = false;
             table1.ColumnBack = Color.FromArgb(239, 154, 78);
             table1.ColumnFont = new Font("Microsoft YaHei UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 134);
@@ -83,7 +84,7 @@
             btnConfirm.BackExtend = "";
             btnConfirm.Font = new Font("Microsoft YaHei UI", 13F);
             btnConfirm.ForeColor = Color.FromArgb(235, 227, 221);
-            btnConfirm.IconSvg = "SearchOutlined";
+            btnConfirm.IconSvg = "CheckCircleOutlined";
             btnConfirm.Location = new Point(1061, 772);
             btnConfirm.Name = "btnConfirm";
             btnConfirm.Size = new Size(143, 45);
@@ -98,7 +99,7 @@
             btnCancel.BackExtend = "";
             btnCancel.Font = new Font("Microsoft YaHei UI", 13F);
             btnCancel.ForeColor = Color.FromArgb(235, 227, 221);
-            btnCancel.IconSvg = "SearchOutlined";
+            btnCancel.IconSvg = "CloseOutlined";
             btnCancel.Location = new Point(1221, 772);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(143, 45);
@@ -107,7 +108,7 @@
             btnCancel.Type = AntdUI.TTypeMini.Primary;
             btnCancel.Click += btnCancel_Click;
             // 
-            // FrmTaskSelectDownload2
+            // FrmTaskSelectDownload
             // 
             AutoScaleMode = AutoScaleMode.None;
             BackColor = Color.FromArgb(42, 47, 55);
@@ -117,7 +118,7 @@
             Controls.Add(uiPanel1);
             MaximizeBox = false;
             MinimizeBox = false;
-            Name = "FrmTaskSelectDownload2";
+            Name = "FrmTaskSelectDownload";
             RectColor = Color.FromArgb(49, 54, 64);
             ShowIcon = false;
             ShowInTaskbar = false;

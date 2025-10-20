@@ -63,6 +63,7 @@
             table1.Size = new Size(1330, 594);
             table1.TabIndex = 0;
             table1.CellButtonClick += Table1_CellButtonClick;
+            table1.CellDoubleClick += Table1_CellDoubleClick;
             // 
             // selectProjectNumber
             // 

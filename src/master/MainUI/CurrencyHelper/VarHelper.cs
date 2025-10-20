@@ -18,12 +18,12 @@ namespace MainUI.CurrencyHelper
         public static ProductionSystemConfig ProductionConfig;
         public static bool isRedoing = false;//是否连续任务标志位
 
-        // 车型编码下标
-        public static int ProjectNumberKey = -1;
+        // 车型编码
+        public static string LastProjectNumber { get; set; } = "";
         // 配属辆号下标
-        public static int CarCodeKey = -1;
+        public static string LastCarCode { get; set; } = "";
         // 车列号下标
-        public static int TrainNoKey = -1;
+        public static string LastTrainNo { get; set; } = "";
 
         static VarHelper()
         {
